@@ -1,0 +1,48 @@
+{
+  "variables": {
+    "centos_version_minor": "7",
+    "centos_iso_checksum": "51f90e8ddd2ea199780065eaf75130ad"
+  },
+  "builders": [
+    {
+      "name": "centos-6.{{user `centos_version_minor`}}",
+      "type": "virtualbox-iso",
+      "guest_os_type": "RedHat_64",
+      "vboxmanage": [
+        ["modifyvm", "{{.Name}}", "--memory", "512"]
+      ],
+      "iso_url": "http://mirrors.kernel.org/centos/6/isos/x86_64/CentOS-6.{{user `centos_version_minor`}}-x86_64-bin-DVD1.iso",
+      "iso_checksum": "{{user `centos_iso_checksum`}}",
+      "iso_checksum_type": "md5",
+      "http_directory": "http",
+      "headless": true,
+      "boot_wait": "5s",
+      "boot_command": [
+        "<tab> text ks=http://{{.HTTPIP}}:{{.HTTPPort}}/centos-6.cfg<enter>"
+      ],
+      "ssh_wait_timeout": "15m",
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
+      "ssh_pty": true,
+      "shutdown_command": "echo 'vagrant' | sudo -S shutdown -P now"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "scripts": [
+        "scripts/root_setup.sh",
+        "scripts/virtualbox.sh",
+        "scripts/vagrant.sh",
+        "scripts/install_versions.sh"
+      ],
+      "execute_command": "echo 'vagrant' | sudo -S sh -l '{{ .Path }}'"
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "vagrant",
+      "output": "dist/sendgrid_{{.BuildName}}_{{timestamp}}.box"
+    }
+  ]
+}
